@@ -55,6 +55,7 @@ const starting_vertex_input = document.getElementById("starting-vertex");
 
 var graph_undirected = new Map();
 var graph_directed = new Map();
+var previous_node = {};
 var shortest = {};
 
 var cy = cytoscape(
@@ -112,6 +113,7 @@ function dijkstra()
 	}
 	adjacency_list.forEach(function(val, node){
 		shortest[node] = Number.MAX_VALUE;
+		previous_node[node] = null;
 	});
 	shortest[starting_vertex] = 0;
 	pq.push(0, starting_vertex);
@@ -123,10 +125,22 @@ function dijkstra()
 		adjacency_list.get(node).forEach(it => {
 			if (shortest[node] + it.weight < shortest[it.target]){
 				shortest[it.target] = shortest[node] + it.weight;
+				previous_node[it.target] = node;
 				pq.push(shortest[it.target], it.target);
 			}
 		});
+	}
 	console.log(shortest);
+}
+
+function get_path(node)
+{
+	var n = node;
+	var s = "";
+	while (n != null)
+	{
+		s += n + "<-";
+		n = previous_node[n];
 	}
 }
 
