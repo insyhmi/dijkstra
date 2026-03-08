@@ -4,12 +4,18 @@
 	--border-color: #ddd;
 	--background-color: #121212;
 	--controls-background-color: #2c2c2c;
-	--table-tr-hover: #067e28;
+	--table-tr-hover: #08b146;
 }
 *
 {
 	font-family: "Consolas";
 	box-sizing: border-box;
+}
+html, body
+{
+	height: 100%;
+	margin: 0;
+	padding: 0;
 }
 html
 {
@@ -180,4 +186,8 @@ th
 td, th
 {
 	padding: 10px 7px;
+}
+td:hover
+{
+	cursor: pointer; 
 }

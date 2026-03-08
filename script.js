@@ -1,7 +1,8 @@
 class Pair{
-	constructor(weight, target){
+	constructor(weight, target, uid){
 		this.weight = weight;
 		this.target = target;
+		this.uid = uid;
 	}
 }
 
@@ -9,8 +10,8 @@ class PriorityQueue{
 	constructor(){
 		this.heap = [];
 	}
-	push(weight, target){
-		let p = new Pair(weight, target);
+	push(weight, target, uid){
+		let p = new Pair(weight, target, uid);
 		let inserted = false;
 		for (let i = 0; i < this.heap.length; i++){
 			if (this.heap[i].weight > weight){
@@ -52,16 +53,20 @@ const cy_width = document.getElementById("cy").scrollWidth;
 const cy_height = document.getElementById("cy").scrollHeight;
 const run = document.getElementById("run");
 const starting_vertex_input = document.getElementById("starting-vertex");
+const table = document.getElementById("result-table");
+const default_node_color = "#06aa58";
+const fit_view = document.getElementById("fit-view");
 
 var graph_undirected = new Map();
 var graph_directed = new Map();
 var previous_node = {};
+var previous_edge = {};
 var shortest = {};
+var edited = true;
 
 var cy = cytoscape(
 {
 	container: document.getElementById("cy"),
-
 	boxSelectionEnabled: false,
 	autounselectify: true,
 	elements: [], // node and edges
@@ -70,7 +75,7 @@ var cy = cytoscape(
 			selector: 'node',
 			style: {
 				'label': 'data(id)',
-				'background-color': '#078ee8',
+				'background-color': default_node_color,
 				'color' : 'white'
 			}
 		},
@@ -101,6 +106,11 @@ function dijkstra()
 	var starting_vertex = starting_vertex_input.value;	
 	var e, node, distance;
 	let pq = new PriorityQueue();
+	let html_snippet = `
+		<tr>
+			<th>Node</th>
+			<th>Distance</th>
+		</tr>`;
 	if (is_directed.checked){
 		adjacency_list = graph_directed;
 	} else{
@@ -115,6 +125,8 @@ function dijkstra()
 		shortest[node] = Number.MAX_VALUE;
 		previous_node[node] = null;
 	});
+	previous_node = {};
+	previous_edge = {};
 	shortest[starting_vertex] = 0;
 	pq.push(0, starting_vertex);
 	while (!pq.isEmpty()){
@@ -126,22 +138,26 @@ function dijkstra()
 			if (shortest[node] + it.weight < shortest[it.target]){
 				shortest[it.target] = shortest[node] + it.weight;
 				previous_node[it.target] = node;
+				previous_edge[it.target] = it.uid;
 				pq.push(shortest[it.target], it.target);
 			}
 		});
 	}
-	console.log(shortest);
+	edited = false;
+	Object.entries(shortest).forEach(([node, d]) => {
+		if (d == Number.MAX_VALUE) d = -1;
+		html_snippet += `
+		<tr data-rid=${node}>
+			<td> ${node} </td>
+			<td> ${d} </td>
+		</tr>`
+	});
+	table.innerHTML = html_snippet;
 }
 
-function get_path(node)
+function random_id()
 {
-	var n = node;
-	var s = "";
-	while (n != null)
-	{
-		s += n + "<-";
-		n = previous_node[n];
-	}
+	return parseInt(Math.random() * 100000000000);
 }
 
 function open_add_vertex_window()
@@ -168,35 +184,69 @@ function close_add_edge_window()
 
 function remove_vertex(vid)
 {
-	var id = vid.getAttribute("data-vid");
-	var vertex = cy.$id(id);
-	var newarr, feid, bied;
+	var target_id = vid.getAttribute("data-vid");
+	var vertex = cy.$id(target_id);
+	var newarr, feid, beid;
 	cy.remove(vertex);
-	console.log(id);
-	graph_undirected.delete(id);
-	graph_directed.delete(id);
+	console.log(target_id);
+	graph_undirected.delete(target_id);
+	graph_directed.delete(target_id);
 	graph_undirected.forEach(function(arr, source) {
-		feid = document.querySelector(`[data-eid="${source}-${id}"]`);
-		beid = document.querySelector(`[data-eid="${id}-${source}"]`);
+		feid = document.querySelector(`[data-eid="${source}-${target_id}"]`);
+		beid = document.querySelector(`[data-eid="${target_id}-${source}"]`);
+		console.log(feid);
+		console.log(beid);
 		remove_edge(feid);
 		remove_edge(beid);
-		newarr = arr.filter(p => p.target !== id);
+		newarr = arr.filter(p => p.target !== target_id);
 		graph_undirected.set(source, newarr);
 	});
 	graph_directed.forEach(function(arr, source) {
-		newarr = arr.filter(p => p.target !== id);
+		newarr = arr.filter(p => p.target !== target_id);
 		graph_directed.set(source, newarr);
 	});
 	vid.remove();
+	edited = true;
 }
 
 function remove_edge(eid)
 {
 	if (!eid) return;
-	var id = eid.getAttribute("data-eid");
-	var edge = cy.$id(id);
-	cy.remove(edge);
-	eid.remove();
+    var id = eid.getAttribute("data-eid");
+    var edge = cy.$id(id);
+    if (!edge.empty()) {
+        let source = edge.source().id();
+        let target = edge.target().id();
+        const filterFn = (pair) => pair.uid !== id;
+        if (graph_directed.has(source)) {
+            graph_directed.set(source, graph_directed.get(source).filter(filterFn));
+        }
+        if (graph_undirected.has(source)) {
+            graph_undirected.set(source, graph_undirected.get(source).filter(filterFn));
+        }
+        if (graph_undirected.has(target)) {
+            graph_undirected.set(target, graph_undirected.get(target).filter(filterFn));
+        }
+    }
+    cy.remove(edge);
+    eid.remove();
+    edited = true;
+}
+
+function show_path(node)
+{
+	if (edited){
+		console.log("Re run the simulation to update the results");
+		return;
+	}
+	cy.nodes().style("background-color", default_node_color);
+	cy.edges().style("line-color", "white");
+	let n = node.getAttribute("data-rid");
+	while (n != null){
+		cy.nodes(`[id="${n}"]`).style("background-color", "#00ff0d");
+		cy.edges(`[id="${previous_edge[n]}"]`).style("line-color", "#03a2ca");
+		n = previous_node[n];
+	}
 }
 
 document.addEventListener('click', function(event)
@@ -248,6 +298,7 @@ add_vertex_button.addEventListener("click", function() {
 		add_vertex_error.innerHTML = "";
 		vertices_menu.insertAdjacentHTML('beforeend', htmlSnippet);
 		close_add_vertex_window();
+		edited = true;
 	} else{
 		add_vertex_error.innerHTML ="Vertex already exists";
 	}
@@ -257,7 +308,8 @@ add_edge_button.addEventListener("click", function() {
 	var source = input_edge_source.value.trim();
 	var target = input_edge_target.value.trim();
 	var weight = input_edge_weight.value.trim();
-	var eid = `${source}-${target}`;
+	var random = random_id();
+	var eid = `${source}-${target}-${random}`;
 	var htmlSnippet = `
 		<div data-eid='${eid}'>
 			<button class="delete-ebtn">
@@ -287,15 +339,27 @@ add_edge_button.addEventListener("click", function() {
 			weight: weight
 		}
 	});
-	let directed_pair = new Pair(Number(weight), target);
-	let invert_pair = new Pair(Number(weight), source);
+	let directed_pair = new Pair(Number(weight), target, eid);
+	let invert_pair = new Pair(Number(weight), source, eid);
+	console.log(directed_pair + "\n" + invert_pair);
 	// Directed 
 	graph_directed.get(source).push(directed_pair);
 	// Undirected
 	graph_undirected.get(source).push(directed_pair);
 	graph_undirected.get(target).push(invert_pair);
 	edges_menu.insertAdjacentHTML('beforeend', htmlSnippet);
+	edited = true;
 	close_add_edge_window();
+});
+
+fit_view.addEventListener('click', function(e) {
+	cy.fit();
+});
+
+table.addEventListener('click', function(event) {
+	const clicked_row = event.target.closest('[data-rid]');
+	console.log(clicked_row);
+	show_path(clicked_row);
 });
 
 run.addEventListener("click", function() {
