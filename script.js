@@ -55,6 +55,7 @@ const run = document.getElementById("run");
 const starting_vertex_input = document.getElementById("starting-vertex");
 const table = document.getElementById("result-table");
 const default_node_color = "#06aa58";
+const reset_graph_button = document.getElementById("reset");
 const fit_view = document.getElementById("fit-view");
 
 var graph_undirected = new Map();
@@ -352,8 +353,24 @@ add_edge_button.addEventListener("click", function() {
 	close_add_edge_window();
 });
 
+reset_graph_button.addEventListener('click', function (e) {
+	cy.elements.remove();
+});
 fit_view.addEventListener('click', function(e) {
 	cy.fit();
+	vertices_menu.innerHTML = `
+	<div>
+		Starting Vertex: <input id='starting-vertex'>
+	</div>
+	<div>
+		<button onclick="open_add_vertex_window()">Add Vertex</button>
+	</div>`;
+	edges_menu.innerHTML = `
+	<div>
+		<button onclick="open_add_edge_window()">Add Edge</button>
+	</div>`;
+	graph_directed.clear();
+	graph_undirected.clear();
 });
 
 table.addEventListener('click', function(event) {

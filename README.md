@@ -19,3 +19,10 @@ still work in progress
 ## 03.05.2026
 
 the logic has been implemented (I just rewrote from my script in gists in JS. [See here](https://gist.github.com/insyhmi/85fadf3032bce35a51b5f9337ba1086f))
+
+## 03.08.2026
+
+- working functional buttons
+- implemented result table
+- clicking on a row within the table shows the shortest path to take from the starting point to target
+- slight color changes
