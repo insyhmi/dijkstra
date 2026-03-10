@@ -35,6 +35,7 @@ class PriorityQueue{
 	}
 }
 
+const ANIMATION_SPEED = 500;
 const is_directed = document.getElementById("directed-checkbox");
 const vertex_modal = document.getElementById("ModalVertex");
 const edge_modal = document.getElementById("ModalEdge");
@@ -57,6 +58,8 @@ const table = document.getElementById("result-table");
 const default_node_color = "#06aa58";
 const reset_graph_button = document.getElementById("reset");
 const fit_view = document.getElementById("fit-view");
+const speed_multiplier_range = document.getElementById("speed");
+const speed_label = document.getElementById("speed-label");
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 async function delay(ms) {sleep(ms);}
@@ -111,6 +114,7 @@ async function dijkstra()
 	var starting_vertex = starting_vertex_input.value;	
 	var e, node, distance, cyNode, neighbours;
 	let pq = new PriorityQueue();
+	var speed = ANIMATION_SPEED * (1/Number(speed_multiplier_range.value));
 	let html_snippet = `
 		<tr>
 			<th>Node</th>
@@ -132,9 +136,13 @@ async function dijkstra()
 	});
 	previous_node = {};
 	previous_edge = {};
-	cy.nodes().forEach(function(n) {
-		n.data('label', `${n.id()}\ninf`);
-	})
+	cy.nodes().animate({
+        style: { 
+			'label': 'data(id)\ninf' 
+		}
+    }, { 
+		duration: speed 
+	});
 	cy.$id(starting_vertex).data('label', `${starting_vertex}\n0`);
 	shortest[starting_vertex] = 0;
 	pq.push(0, starting_vertex);
@@ -144,25 +152,47 @@ async function dijkstra()
 		distance = e.weight;
 		if (shortest[node] < distance) continue;
 		cyNode = cy.$id(node);
-		cyNode.style('background-color', "red");
-		await sleep(1000);
+		cyNode.animate({
+            style: { 
+				'background-color': 'red' 
+			}
+        }, { 
+			duration: speed 
+		});
+        await sleep(speed + 500)
 		neighbours = adjacency_list.get(node);
 		for (let it of neighbours){
 			let tn = cy.$id(it.target);
-			tn.style("background-color", "yellow");
-			await sleep(1000);
+			tn.animate({
+				style: {
+					"background-color": "yellow"
+				}
+			}, {
+				duration: speed
+			});
 			if (shortest[node] + it.weight < shortest[it.target]){
 				shortest[it.target] = shortest[node] + it.weight;
 				previous_node[it.target] = node;
 				previous_edge[it.target] = it.uid;
+				cy.$id(it.uid).animate({
+					style: {
+						"line-color": "yellow"
+					}
+				}, {
+					duration: speed
+				});
+				await sleep(speed + 500);
 				cy.$id(it.target).data('label', `${it.target}\n${shortest[it.target]}`);
 				pq.push(shortest[it.target], it.target);
-				tn.style('background-color', '#1dd1a1'); 
-                await sleep(1000);
+				tn.animate({style: {"background-color": "#04ffb4"}}, {duration: speed});
+				cy.$id(it.uid).animate({style: {"line-color": "white"}}, {duration: speed});
+                await sleep(speed) + 500;
 			}
-			tn.style("background-color", default_node_color);
+			tn.animate({style: {"background-color": default_node_color}}, {duration: speed});
+			await sleep(speed + 500);
 		}
-		cyNode.style("background-color", default_node_color);
+		cyNode.animate({style: {"background-color": default_node_color}}, {duration: speed});
+		await sleep(speed + 500);
 	}
 	edited = false;
 	Object.entries(shortest).forEach(([node, d]) => {
@@ -375,7 +405,14 @@ add_edge_button.addEventListener("click", function() {
 	close_add_edge_window();
 });
 
+speed_multiplier_range.addEventListener('change', function(e) {
+	speed_label.innerHTML = `Speed: ${speed_multiplier_range.value}x`;
+});
+
 reset_graph_button.addEventListener('click', function (e) {
+	if (!confirm("Are you sure to reset the graph?")){
+		return;
+	}
 	cy.elements.remove();
 	vertices_menu.innerHTML = `
 		<div>

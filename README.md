@@ -26,3 +26,10 @@ the logic has been implemented (I just rewrote from my script in gists in JS. [S
 - implemented result table
 - clicking on a row within the table shows the shortest path to take from the starting point to target
 - slight color changes
+
+## 03.11.2026
+
+- animated color change properly demonstrate search algorithm
+- confirmation box before resetting the graph
+- fit graph to view button
+- speed multiplier slider (not the best but hey its something)
