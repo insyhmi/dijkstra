@@ -6,12 +6,19 @@ This project demonstrates the algorithmic method of Dijkstra in finding the shor
 
 Involving non-negative vertices, the algorithm greedily compares edges and find the most optimal route to reach a particular point in the graph.
 
-One can argue that this is not a Dijkstra's algorithm showcase - rather a mere shortest distance finder, because it does not actually present the entire process of Dijkstra's algorithm in use and I agree with you.
+## Usage
 
-In the future, I plan to animate the process to better show how the algorithm performs in real-time - that's what actual simulation is. 
+To add a node/vertex, click "Add Vertex" and enter necessary information. The vertex ID's should be unique to other vertices.
 
-But for now, enjoy what I've build - a shortest distance finder. 
+To add an edge, click "Add Edge", and enter necessary information. The vertices involved should exists in the environment.
 
+To run, click "Run Simulation" and watch the algorithm finds the shortest path for each vertex in action. 
+
+To check preferred path, click on a row in the result table. It will highlight the path from the source vertex to the target vertex.
+
+To fit the graph in view, click "Fit View".
+
+To clear the environment, click "Reset Graph".
 ## 03.03.2026
 
 still work in progress
@@ -33,3 +40,8 @@ the logic has been implemented (I just rewrote from my script in gists in JS. [S
 - confirmation box before resetting the graph
 - fit graph to view button
 - speed multiplier slider (not the best but hey its something)
+
+## 03.14.2026
+
+- validating the weight is a number
+- deployment

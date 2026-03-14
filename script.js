@@ -110,7 +110,7 @@ async function dijkstra()
 		alert("Please put a valid starting vertex");
 		return;
 	}
-	var adjacency_list;
+	var adjacency_list;``
 	var starting_vertex = starting_vertex_input.value;	
 	var e, node, distance, cyNode, neighbours;
 	let pq = new PriorityQueue();
@@ -136,13 +136,9 @@ async function dijkstra()
 	});
 	previous_node = {};
 	previous_edge = {};
-	cy.nodes().animate({
-        style: { 
-			'label': 'data(id)\ninf' 
-		}
-    }, { 
-		duration: speed 
-	});
+	cy.nodes().forEach(function(n) {
+		n.data('label', `${n.id()}\ninf`);
+	})
 	cy.$id(starting_vertex).data('label', `${starting_vertex}\n0`);
 	shortest[starting_vertex] = 0;
 	pq.push(0, starting_vertex);
@@ -159,7 +155,7 @@ async function dijkstra()
         }, { 
 			duration: speed 
 		});
-        await sleep(speed + 500)
+        await sleep(speed + 500);
 		neighbours = adjacency_list.get(node);
 		for (let it of neighbours){
 			let tn = cy.$id(it.target);
@@ -170,6 +166,7 @@ async function dijkstra()
 			}, {
 				duration: speed
 			});
+			await sleep(speed+500);
 			if (shortest[node] + it.weight < shortest[it.target]){
 				shortest[it.target] = shortest[node] + it.weight;
 				previous_node[it.target] = node;
@@ -294,7 +291,6 @@ function show_path(node)
 	cy.edges().style("line-color", "white");
 	let n = node.getAttribute("data-rid");
 	while (n != null){
-		cy.nodes(`[id="${n}"]`).style("background-color", "#00ff0d");
 		cy.edges(`[id="${previous_edge[n]}"]`).style("line-color", "#03a2ca");
 		n = previous_node[n];
 	}
@@ -329,9 +325,9 @@ add_vertex_button.addEventListener("click", function() {
 	if (input_vertex_id.value.trim() == ""){
 		return;
 	}
-	var new_vid = input_vertex_id.value;
+	var new_vid = input_vertex_id.value.replaceAll(" ", "_");;
 	var htmlSnippet = `
-		<div data-vid='${new_vid}'>
+		<div data-vid="${new_vid}">
 			<button class="delete-vbtn">
 				<i class="fa-solid fa-square-xmark"></i>
 			</button>
@@ -361,7 +357,11 @@ add_vertex_button.addEventListener("click", function() {
 add_edge_button.addEventListener("click", function() {
 	var source = input_edge_source.value.trim();
 	var target = input_edge_target.value.trim();
-	var weight = input_edge_weight.value.trim();
+	var weight = Number.parseFloat(input_edge_weight.value.trim());
+	if (Number.isNaN(weight)){
+		add_edge_error.innerHTML = "Weight should be a number";
+		return;
+	}
 	var random = random_id();
 	var eid = `${source}-${target}-${random}`;
 	var htmlSnippet = `
@@ -413,7 +413,7 @@ reset_graph_button.addEventListener('click', function (e) {
 	if (!confirm("Are you sure to reset the graph?")){
 		return;
 	}
-	cy.elements.remove();
+	cy.elements().remove();
 	vertices_menu.innerHTML = `
 		<div>
 			Starting Vertex: <input id='starting-vertex'>
